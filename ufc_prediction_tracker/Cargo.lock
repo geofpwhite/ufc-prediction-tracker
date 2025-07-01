@@ -3754,6 +3754,7 @@ dependencies = [
  "base64",
  "bytes",
  "encoding_rs",
+ "futures-channel",
  "futures-core",
  "futures-util",
  "h2",
@@ -4892,6 +4893,7 @@ name = "ufc_prediction_tracker"
 version = "0.1.0"
 dependencies = [
  "dioxus",
+ "dioxus-logger",
  "log",
  "reqwest",
  "rusqlite",
@@ -4899,6 +4901,8 @@ dependencies = [
  "serde",
  "serde_json",
  "tokio",
+ "tracing",
+ "web-sys",
 ]
 
 [[package]]
