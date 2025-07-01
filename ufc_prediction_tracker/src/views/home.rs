@@ -1,42 +1,51 @@
+use crate::{api, Route};
 use dioxus::prelude::*;
 use log;
 
 #[component]
 pub fn Home() -> Element {
-    let mut name = use_signal(String::new);
-    let mut email = use_signal(String::new);
+    let mut event_list = use_signal(|| Vec::<(String, String, usize)>::new());
 
-    rsx! {
-        div {
-            class: "container mx-auto",
-            h1 { class: "text-2xl font-bold", "Users" }
-            div {
-                class: "my-4",
-                input {
-                    class: "border p-2 mr-2",
-                    placeholder: "Name",
-                    value: name.read().as_str(),
-                    oninput: move |evt| name.set(evt.value().clone()),
-                }
-                input {
-                    class: "border p-2 mr-2",
-                    placeholder: "Email",
-                    value: email.read().as_str(),
-                    oninput: move |evt| email.set(evt.value().clone()),
-                }
-                button {
-                    class: "bg-blue-500 text-white p-2",
-                    onclick: move |_| {
-                        let name = name.read().clone();
-                        let email = email.read().clone();
-                        spawn(async move {
-                        });
-                    },
-                    "Add User"
+    // Use an effect to fetch and update events on mount
+    use_effect(move || {
+        spawn({
+            async move {
+                match api::get_upcoming_events().await {
+                    Ok(events) => {
+                        for event in &events {
+                            println!("Upcoming Event: {}-{}-{}", event.0, event.1, event.2);
+                        }
+                        event_list.write().extend(events.clone().into_iter())
+                    }
+                    Err(e) => println!("Failed to add upcoming events: {}", e),
                 }
             }
-            ul {
-
+        });
+    });
+    rsx! {
+        div { class: "container mx-auto",
+            h1 { class: "text-2xl font-bold", "Events" }
+            div { class: "my-4" }
+            ul { class: "divide-y divide-gray-200 rounded-lg border border-gray-200 shadow-md mt-4",
+                {
+                    event_list()
+                        .iter()
+                        .map(|event| {
+                            println!("{}", event.1.clone());
+                            rsx! {
+                                Link {
+                                    to: Route::Predict {
+                                        id: event.2.clone(),
+                                        link: event.1.clone(),
+                                    },
+                                    class: "block",
+                                    li { class: "p-4 text-black-100 hover:bg-blue-500 cursor-pointer transition-colors w-full",
+                                        "{event.0}"
+                                    }
+                                }
+                            }
+                        })
+                }
             }
         }
     }

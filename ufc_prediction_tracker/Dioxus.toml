@@ -9,7 +9,8 @@ title = "ufc_prediction_tracker"
 [web.resource]
 
 # Additional CSS style files
-style = []
+style = [
+]
 
 # Additional JavaScript files
 script = []

@@ -1,15 +1,13 @@
 #![windows_subsystem = "windows"]
-use std::ptr::null;
 
 // The dioxus prelude contains a ton of common items used in dioxus apps. It's a good idea to import wherever you
 // need dioxus
-use dioxus::{desktop::DesktopService, prelude::*};
+use dioxus::{logger::tracing::Level, prelude::*};
 
-use views::{Blog, Home, Navbar};
-/// Define a components module that contains all shared components for our app.
-mod components;
+use views::{Home, Navbar, PastPredictions, Predict};
+mod api;
 mod db;
-mod server_funcs;
+
 /// Define a views module that contains the UI for all Layouts and Routes for our app.
 mod views;
 /// The Route enum is used to define the structure of internal routes in our app. All route enums need to derive
@@ -27,12 +25,16 @@ enum Route {
         // the component for that route will be rendered. The component name that is rendered defaults to the variant name.
         #[route("/")]
         Home {},
+        
+        #[route("/predict/:id/:link")]
+        Predict {id: usize,link: String},
         // The route attribute can include dynamic parameters that implement [`std::str::FromStr`] and [`std::fmt::Display`] with the `:` syntax.
         // In this case, id will match any integer like `/blog/123` or `/blog/-456`.
-        #[route("/blog/:id")]
         // Fields of the route variant will be passed to the component as props. In this case, the blog component must accept
         // an `id` prop of type `i32`.
-        Blog { id: i32 },
+        
+        #[route("/past-predictions")]
+        PastPredictions {},
 }
 
 // We can import assets in dioxus with the `asset!` macro. This macro takes a path to an asset relative to the crate root.
@@ -43,16 +45,19 @@ const MAIN_CSS: Asset = asset!("/assets/styling/main.css");
 const TAILWIND_CSS: Asset = asset!("/assets/tailwind.css");
 
 fn main() {
+    dioxus_logger::init(Level::INFO).expect("failed to init logger");
+
     // The `launch` function is the main entry point for a dioxus app. It takes a component and renders it with the platform feature
     // you have enabled
     let conn = db::get_db_connection().expect("Failed to connect to database");
     db::create_tables(&conn).expect("Failed to create tables");
-    dioxus::LaunchBuilder::desktop()
-        .with_cfg(
-            dioxus::desktop::Config::new()
-                .with_window(dioxus::desktop::WindowBuilder::new().with_resizable(true)),
-        )
-        .launch(App);
+    // dioxus::LaunchBuilder::desktop()
+    //     .with_cfg(
+    //         dioxus::desktop::Config::new()
+    //             .with_window(dioxus::desktop::WindowBuilder::new().with_resizable(true)),
+    //     )
+    //     .launch(App);
+    dioxus::launch(App);
 }
 
 /// App is the main component of our app. Components are the building blocks of dioxus apps. Each component is a function
@@ -67,11 +72,11 @@ fn App() -> Element {
         // we are using the `document::Link` component to add a link to our favicon and main CSS file into the head of our app.
         document::Stylesheet {
             // Urls are relative to your Cargo.toml file
-            href: asset!("/assets/tailwind.css")
+            href: asset!("/assets/output.css"),
         }
         document::Link { rel: "icon", href: FAVICON }
-        document::Link { rel: "stylesheet", href: MAIN_CSS }
-        document::Link { rel: "stylesheet", href: TAILWIND_CSS }
+        document::Stylesheet { href: MAIN_CSS }
+        document::Stylesheet { href: TAILWIND_CSS }
 
         // The router component renders the route enum we defined above. It will handle synchronization of the URL and render
         // the layouts and components for the active route.
