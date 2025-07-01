@@ -16,3 +16,6 @@ pub use navbar::Navbar;
 
 mod make_predictions;
 pub use make_predictions::Predict;
+
+mod past_predictions;
+pub use past_predictions::PastPredictions;

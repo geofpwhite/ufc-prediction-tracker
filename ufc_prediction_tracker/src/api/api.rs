@@ -132,4 +132,25 @@ pub async fn get_predictions(event_id: usize) -> Result<Vec<(String, String)>, S
 }
 
 #[server]
-pub async fn add_results(link: String, event_id: usize) -> Result<_, ServerFnError> {}
+pub async fn add_results(link: String, event_id: usize) -> Result<(), ServerFnError> {
+    Ok(())
+}
+
+#[server]
+pub async fn get_events_with_predictions() -> Result<Vec<(usize, String, String)>, ServerFnError> {
+    let conn = db::get_db_connection().expect("Failed to connect to database");
+    let mut stmt = conn.prepare("SELECT DISTINCT events.id, events.name, events.date FROM events JOIN predictions ON events.id = predictions.event_id").unwrap();
+    let rows = stmt
+        .query_map([], |row| {
+            let id: usize = row.get(0)?;
+            let name: String = row.get(1)?;
+            let date: String = row.get(2)?;
+            Ok((id, name, date))
+        })
+        .unwrap();
+    let mut result = Vec::new();
+    for row in rows {
+        result.push(row.unwrap());
+    }
+    Ok(result)
+}

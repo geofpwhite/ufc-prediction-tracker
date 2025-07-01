@@ -4,9 +4,10 @@
 // need dioxus
 use dioxus::{logger::tracing::Level, prelude::*};
 
-use views::{Home, Navbar, Predict};
+use views::{Home, Navbar, PastPredictions, Predict};
 mod api;
 mod db;
+
 /// Define a views module that contains the UI for all Layouts and Routes for our app.
 mod views;
 /// The Route enum is used to define the structure of internal routes in our app. All route enums need to derive
@@ -31,6 +32,9 @@ enum Route {
         // In this case, id will match any integer like `/blog/123` or `/blog/-456`.
         // Fields of the route variant will be passed to the component as props. In this case, the blog component must accept
         // an `id` prop of type `i32`.
+        
+        #[route("/past-predictions")]
+        PastPredictions {},
 }
 
 // We can import assets in dioxus with the `asset!` macro. This macro takes a path to an asset relative to the crate root.

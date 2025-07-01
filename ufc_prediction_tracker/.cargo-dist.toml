@@ -1,0 +1,13 @@
+# cargo-dist configuration for GitHub Releases
+# See: https://github.com/axodotdev/cargo-dist
+[workspace]
+# List of binaries to distribute (default: all)
+binaries = ["ufc_prediction_tracker"]
+
+[github]
+# Enable GitHub Actions CI for releases
+enabled = true
+# The branch to release from
+branch = "main"
+# The repository slug
+repo = "geoffpiercewhite/ufc-prediction-tracker"

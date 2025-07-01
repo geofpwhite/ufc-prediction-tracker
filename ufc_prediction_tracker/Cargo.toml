@@ -3,6 +3,12 @@ name = "ufc_prediction_tracker"
 version = "0.1.0"
 authors = ["Geoffrey White <geoffpiercewhite@gmail.com>"]
 edition = "2021"
+description = "A UFC prediction tracker with Dioxus UI."
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/geoffpiercewhite/ufc-prediction-tracker"
+readme = "README.md"
+keywords = ["ufc", "prediction", "tracker"]
+categories = ["command-line-utilities"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -18,6 +24,7 @@ reqwest = { version = "0.12.20", features = ["blocking"] }
 web-sys = "0.3.77"
 dioxus-logger = "0.6.2"
 tracing = "0.1.41"
+chrono = "0.4.41"
 
 [features]
 default = ["desktop"]
