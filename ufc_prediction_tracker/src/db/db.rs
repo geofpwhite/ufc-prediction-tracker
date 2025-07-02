@@ -130,14 +130,17 @@ pub fn get_my_predictions_correctness(conn: &Connection) -> Result<(i64, i64)> {
     Ok((correct, incorrect))
 }
 
-pub fn get_events_with_predictions(conn: &Connection) -> Result<Vec<(usize, String, String)>> {
+pub fn get_past_events_with_predictions(
+    conn: &Connection,
+) -> Result<Vec<(usize, String, String, String)>> {
     let mut stmt = conn.prepare("SELECT DISTINCT events.id, events.name, events.date,link FROM events where events.date < date('now')").unwrap();
     let rows = stmt
         .query_map([], |row| {
             let id: usize = row.get(0)?;
             let name: String = row.get(1)?;
             let date: String = row.get(2)?;
-            Ok((id, name, date))
+            let link: String = row.get(3)?;
+            Ok((id, name, date, link))
         })
         .unwrap();
     let mut result = Vec::new();

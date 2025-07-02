@@ -132,7 +132,45 @@ pub async fn add_results(link: String, event_id: usize) -> Result<(), ServerFnEr
 }
 
 #[server]
-pub async fn get_events_with_predictions() -> Result<Vec<(usize, String, String)>, ServerFnError> {
+pub async fn get_events_with_predictions(
+) -> Result<Vec<(usize, String, String, String)>, ServerFnError> {
     let conn = db::get_db_connection().expect("Failed to connect to database");
-    Ok(db::get_events_with_predictions(&conn)?)
+    Ok(db::get_past_events_with_predictions(&conn)?)
+}
+
+#[server]
+pub async fn get_results(
+    event_link: String,
+    event_id: usize,
+) -> Result<Vec<(String, String)>, ServerFnError> {
+    let conn = db::get_db_connection().expect("Failed to connect to database");
+
+    let response = reqwest::get(&event_link)
+        .await
+        .map_err(|e| ServerFnError::new(format!("Failed to fetch event page: {}", e)))?
+        .text()
+        .await
+        .map_err(|e| ServerFnError::new(format!("Failed to get event page text: {}", e)))?;
+    let doc = scraper::Html::parse_document(&response);
+    let row_selector = scraper::Selector::parse("tr.b-fight-details__table-row").unwrap();
+    let name_selector = scraper::Selector::parse("a.b-link.b-link_style_black").unwrap();
+
+    let fights = doc
+        .select(&row_selector)
+        .filter_map(|row| {
+            let mut names = row
+                .select(&name_selector)
+                .map(|el| el.text().collect::<String>().trim().to_string())
+                .filter(|s| s.clone().trim() != "View Matchup" && !s.is_empty())
+                .collect::<Vec<_>>();
+            if names.len() == 2 {
+                // Ensure the winner is the first element in the tuple
+                Some((names[0].clone(), names[1].clone()))
+            } else {
+                None
+            }
+        })
+        .collect::<Vec<(String, String)>>();
+
+    Ok(fights)
 }

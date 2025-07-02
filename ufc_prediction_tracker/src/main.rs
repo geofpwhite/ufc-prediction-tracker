@@ -4,7 +4,7 @@
 // need dioxus
 use dioxus::{logger::tracing::Level, prelude::*};
 
-use views::{Home, Navbar, PastPredictions, Predict};
+use views::{Home, Navbar, PastEvent, PastPredictions, Predict};
 mod api;
 mod db;
 
@@ -35,6 +35,9 @@ enum Route {
         
         #[route("/past-predictions")]
         PastPredictions {},
+        
+        #[route("/past-event/:id/:link")]
+        PastEvent{id: usize, link: String}
 }
 
 // We can import assets in dioxus with the `asset!` macro. This macro takes a path to an asset relative to the crate root.
