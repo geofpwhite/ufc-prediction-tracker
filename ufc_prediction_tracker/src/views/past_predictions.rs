@@ -3,7 +3,7 @@ use dioxus::prelude::*;
 
 #[component]
 pub fn PastPredictions() -> Element {
-    let mut events = use_signal(|| Vec::<(usize, String, String)>::new()); // (id, name, date)
+    let events = use_signal(|| Vec::<(usize, String, String)>::new()); // (id, name, date)
 
     use_effect(move || {
         let mut events = events.clone();

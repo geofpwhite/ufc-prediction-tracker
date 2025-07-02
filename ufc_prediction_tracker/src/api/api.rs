@@ -53,7 +53,7 @@ pub async fn get_upcoming_events() -> Result<Vec<(String, String, usize)>, Serve
     }
     //println!("Upcoming Events:");
     let mut ids: Vec<usize> = vec![];
-    &result.iter().for_each(|event| {
+    &result.iter().zip(links.iter()).for_each(|(event, link)| {
         let mut split: Vec<&str> = event
             .trim()
             .split('\n')
@@ -64,7 +64,7 @@ pub async fn get_upcoming_events() -> Result<Vec<(String, String, usize)>, Serve
         let conn = db::get_db_connection().expect("Failed to connect to database");
         let s1: &str = &split[0];
         let s2: &str = &split[1];
-        let id = db::add_event(&conn, s1, s2).expect("");
+        let id = db::add_event(&conn, s1, s2, link).expect("");
         ids.push(id.clone());
         //println!("{}", id);
     });
@@ -73,11 +73,6 @@ pub async fn get_upcoming_events() -> Result<Vec<(String, String, usize)>, Serve
         .zip(ids.iter())
         .map(|((a, b), c)| (a.clone(), b.clone(), c.clone()))
         .collect())
-}
-
-#[server]
-pub async fn add_prediction() -> Result<bool, ServerFnError> {
-    Ok(true)
 }
 
 #[server]
@@ -139,18 +134,5 @@ pub async fn add_results(link: String, event_id: usize) -> Result<(), ServerFnEr
 #[server]
 pub async fn get_events_with_predictions() -> Result<Vec<(usize, String, String)>, ServerFnError> {
     let conn = db::get_db_connection().expect("Failed to connect to database");
-    let mut stmt = conn.prepare("SELECT DISTINCT events.id, events.name, events.date FROM events JOIN predictions ON events.id = predictions.event_id").unwrap();
-    let rows = stmt
-        .query_map([], |row| {
-            let id: usize = row.get(0)?;
-            let name: String = row.get(1)?;
-            let date: String = row.get(2)?;
-            Ok((id, name, date))
-        })
-        .unwrap();
-    let mut result = Vec::new();
-    for row in rows {
-        result.push(row.unwrap());
-    }
-    Ok(result)
+    Ok(db::get_events_with_predictions(&conn)?)
 }

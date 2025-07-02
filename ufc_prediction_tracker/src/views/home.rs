@@ -39,7 +39,7 @@ pub fn Home() -> Element {
                                         link: event.1.clone(),
                                     },
                                     class: "block",
-                                    li { class: "p-4 text-black-100 hover:bg-blue-50 cursor-pointer transition-colors w-full",
+                                    li { class: "p-4 text-black-100 hover:bg-blue-500 cursor-pointer transition-colors w-full",
                                         "{event.0}"
                                     }
                                 }
