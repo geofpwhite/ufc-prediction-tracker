@@ -1,7 +1,5 @@
 #![windows_subsystem = "windows"]
 
-// The dioxus prelude contains a ton of common items used in dioxus apps. It's a good idea to import wherever you
-// need dioxus
 use dioxus::{logger::tracing::Level, prelude::*};
 
 use views::{Home, Navbar, PastEvent, PastPredictions, Predict};

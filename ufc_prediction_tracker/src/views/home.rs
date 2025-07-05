@@ -15,7 +15,7 @@ pub fn Home() -> Element {
                         for event in &events {
                             println!("Upcoming Event: {}-{}-{}", event.0, event.1, event.2);
                         }
-                        event_list.write().extend(events.clone().into_iter())
+                        event_list.write().extend(events.into_iter())
                     }
                     Err(e) => println!("Failed to add upcoming events: {}", e),
                 }
@@ -31,16 +31,22 @@ pub fn Home() -> Element {
                     event_list()
                         .iter()
                         .map(|event| {
-                            println!("{}", event.1.clone());
+                            let mut title_date = event
+                                .0
+                                .trim_matches(|char| char == '|')
+                                .split("||");
+                            let title = title_date.next().expect("");
+                            let date = title_date.next().expect("");
                             rsx! {
                                 Link {
                                     to: Route::Predict {
-                                        id: event.2.clone(),
+                                        id: event.2,
                                         link: event.1.clone(),
                                     },
                                     class: "block",
-                                    li { class: "p-4 text-black-100 hover:bg-blue-500 cursor-pointer transition-colors w-full",
-                                        "{event.0}"
+                                    li { class: "p-4 text-black-100 hover:bg-blue-500 cursor-pointer transition-colors w-full flex justify-between items-center gap-4",
+                                        div { class: "flex-1 rounded-l-lg px-4 py-2 font-bold", "{title}" }
+                                        div { class: "rounded-r-lg px-4 py-2 text-gray-600 text-sm", "{date}" }
                                     }
                                 }
                             }

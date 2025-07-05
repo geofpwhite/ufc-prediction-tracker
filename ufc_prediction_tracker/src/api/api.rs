@@ -127,8 +127,16 @@ pub async fn get_predictions(event_id: usize) -> Result<Vec<(String, String)>, S
 }
 
 #[server]
-pub async fn add_results(link: String, event_id: usize) -> Result<(), ServerFnError> {
-    Ok(())
+pub async fn add_result(
+    event_id: usize,
+    winner: String,
+    loser: String,
+) -> Result<usize, ServerFnError> {
+    let conn = db::get_db_connection().expect("Failed to connect to database");
+    match db::add_or_update_result(&conn, event_id, &winner, &loser) {
+        Ok(f) => Ok(f),
+        Err(e) => Err(e.into()),
+    }
 }
 
 #[server]
@@ -139,12 +147,11 @@ pub async fn get_events_with_predictions(
 }
 
 #[server]
-pub async fn get_results(
+pub async fn scrape_results(
     event_link: String,
     event_id: usize,
 ) -> Result<Vec<(String, String)>, ServerFnError> {
     let conn = db::get_db_connection().expect("Failed to connect to database");
-
     let response = reqwest::get(&event_link)
         .await
         .map_err(|e| ServerFnError::new(format!("Failed to fetch event page: {}", e)))?
