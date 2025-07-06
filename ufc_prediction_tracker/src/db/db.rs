@@ -141,6 +141,23 @@ pub fn get_my_predictions_correctness(conn: &Connection) -> Result<(i64, i64)> {
 
     Ok((correct, incorrect))
 }
+pub fn get_my_predictions_correctness_for_event(
+    conn: &Connection,
+    id: usize,
+) -> Result<(i64, i64)> {
+    let correct: i64 = conn.query_row(
+        "SELECT count(*) FROM results as r JOIN predictions as p ON p.event_id=r.event_id and p.winner=r.winner and p.loser=r.loser where p.event_id=?1",
+        (id,),
+        |row: &rusqlite::Row<'_>| row.get(0),
+    )?;
+    let incorrect: i64 = conn.query_row(
+        "SELECT count(*) FROM results as r JOIN predictions as p ON p.event_id=r.event_id and p.loser=r.winner and p.winner=r.loser",
+        (),
+        |row: &rusqlite::Row<'_>| row.get(0),
+    )?;
+
+    Ok((correct, incorrect))
+}
 
 pub fn get_past_events_with_predictions(
     conn: &Connection,

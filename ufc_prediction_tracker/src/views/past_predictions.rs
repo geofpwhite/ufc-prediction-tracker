@@ -5,30 +5,36 @@ use dioxus::prelude::*;
 
 #[component]
 pub fn PastPredictions() -> Element {
-    let events = use_signal(|| Vec::<(usize, String, String, String)>::new()); // (id, name, date)
-
+    let mut events = use_signal(|| Vec::<(usize, String, String, String)>::new()); // (id, name, date)
+    let mut correct = use_signal(|| 0 as i64);
+    let mut incorrect = use_signal(|| 0 as i64);
     use_effect(move || {
-        let mut events = events.clone();
+        // let mut correct = correct.clone();
+        // let mut incorrect = incorrect.clone();
         spawn(async move {
             // Fetch all events with predictions
             if let Ok(predicted_events) = api::get_events_with_predictions().await {
                 // Filter for past events (date < today, date in mm/dd/yyyy)
                 let past_events = predicted_events.into_iter().collect::<Vec<_>>();
-                past_events
-                    .clone()
-                    .into_iter()
-                    .for_each(|(a, b, c, d)| println!("{a},{b},{c}{d}"));
-                println!("{:?}", past_events.clone());
                 events.write().clear();
                 events.write().extend(past_events);
+            }
+        });
+        spawn(async move {
+            // Fetch all events with predictions
+            if let Ok(counts) = api::get_total_prediction_correctness().await {
+                // Filter for past events (date < today, date in mm/dd/yyyy)
+                let c = counts.0;
+                let i = counts.1;
+                *incorrect.write() = i;
+                *correct.write() = c;
             }
         });
     });
 
     rsx! [
         div { class: "container mx-auto",
-            h1 { class: "text-2xl font-bold mb-4", "Past Predictions" }
-            ul { class: "divide-y divide-gray-200 rounded-lg border border-gray-200 shadow-md mt-4",
+            ul { class: "divide-y  rounded-lg border border-gray-200 shadow-md mt-4",
                 {
                     events()
                         .iter()
@@ -59,13 +65,14 @@ pub fn PastPredictions() -> Element {
 
 #[component]
 pub fn PastEvent(id: usize, link: String) -> Element {
-    let fights = use_signal(|| Vec::<(String, String)>::new());
-    let predictions: Signal<Vec<(String, String)>> = use_signal(|| Vec::<(String, String)>::new());
-    let correctMap = use_signal(|| HashMap::<(String, String), bool>::new());
+    let mut fights = use_signal(|| Vec::<(String, String)>::new());
+    let mut predictions: Signal<Vec<(String, String)>> =
+        use_signal(|| Vec::<(String, String)>::new());
+    let mut correctMap = use_signal(|| HashMap::<(String, String), bool>::new());
     use_effect(move || {
-        let mut fights = fights.clone();
-        let mut predictions = predictions.clone();
-        let mut correctMap = correctMap.clone();
+        // let mut fights = fights.clone();
+        // let mut predictions = predictions.clone();
+        // let mut correctMap = correctMap.clone();
         let link = link.clone();
         spawn(async move {
             if let Ok(result) = api::scrape_results(link, id).await {
@@ -109,9 +116,9 @@ pub fn PastEvent(id: usize, link: String) -> Element {
     rsx! {
         div { class: "container mx-auto",
             h1 { class: "text-2xl font-bold mb-4", "Event Results" }
-            ul { class: "divide-y divide-gray-200 rounded-lg border border-gray-200 shadow-md mt-4",
+            ul { class: "rounded-lg shadow-md mt-4",
                 {fights().iter().map(|(winner, loser)| rsx! {
-                    li { class: "p-6 grid grid-cols-3 items-center gap-4 justify-items-center w-full border border-gray-100 shadow-sm rounded-lg my-4",
+                    li { class: "p-6 grid grid-cols-3 items-center gap-4 justify-items-center w-full border shadow-sm rounded-lg my-4",
                         button {
                             class: "bg-green-500 text-white border border-gray-200 px-6 py-3 rounded-lg text-xl font-bold shadow-md w-full min-w-0 min-h-[56px] flex items-center justify-center cursor-not-allowed",
                             style: "width: 100%; max-width:40vw",
@@ -123,7 +130,25 @@ pub fn PastEvent(id: usize, link: String) -> Element {
                             {
                                 let correct_map_ref = correctMap();
                                 let val = correct_map_ref.get(&(winner.clone(), loser.clone()));
-                                if let None = val {
+                                if let Some(value) = val {
+                                    if *value {
+                                        rsx! {
+                                            span {
+                                                class: "block text-xs text-green-400 mt-1 text-center col-span-3",
+                                                style: "font-size: 0.75rem;",
+                                                "Correct"
+                                            }
+                                        }
+                                    } else {
+                                        rsx! {
+                                            span {
+                                                class: "block text-xs text-red-400 mt-1 text-center col-span-3",
+                                                style: "font-size: 0.75rem;",
+                                                "Incorrect"
+                                            }
+                                        }
+                                    }
+                                } else {
                                     rsx! {
                                         span {
                                             class: "block text-xs text-gray-400 mt-1 text-center col-span-3",
@@ -131,35 +156,28 @@ pub fn PastEvent(id: usize, link: String) -> Element {
                                             "No Prediction"
                                         }
                                     }
-                                } else {
-                                    rsx! {}
                                 }
                             }
                         }
                         button {
                             class: format!(
-                                "bg-gray-200 text-gray-700 border-{} border-{} px-6 py-3 rounded-lg text-xl font-bold shadow-md w-full min-w-0 min-h-[56px] flex items-center justify-center cursor-not-allowed",
+                                "bg-gray-200  {} text-gray-700 px-6 py-3 rounded-lg text-xl font-bold shadow-md w-full min-w-0 min-h-[56px] flex items-center justify-center cursor-not-allowed",
                                 {
                                     let correct_map_ref = correctMap();
                                     let val = correct_map_ref.get(&(winner.clone(), loser.clone()));
                                     if let Some(value) = val {
-                                        if *value == true { "1" } else { "5" }
+                                        if *value == true {
+                                            "border-1 text-gray-700"
+                                        } else {
+                                            "border-5 text-red-500"
+                                        }
                                     } else {
                                         "1"
                                     }
                                 },
-                                {
-                                    let correct_map_ref = correctMap();
-                                    let val = correct_map_ref.get(&(winner.clone(), loser.clone()));
-                                    if let Some(value) = val {
-                                        if *value == true { "gray-400" } else { "red-400" }
-                                    } else {
-                                        "gray-400"
-                                    }
-                                },
                             ),
                             style: "width: 100%; min-width: 0; max-width: 40vw; ",
-                            disabled: true,
+                            disabled: false,
                             "{loser}"
                         }
                     }

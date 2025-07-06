@@ -181,3 +181,13 @@ pub async fn scrape_results(
 
     Ok(fights)
 }
+
+#[server]
+pub async fn get_total_prediction_correctness() -> Result<(i64, i64), ServerFnError> {
+    let conn = db::get_db_connection().expect("");
+    Ok(db::get_my_predictions_correctness(&conn)?)
+}
+#[server]
+pub async fn get_prediction_correctness_for_event(id: usize) -> Result<(i64, i64), ServerFnError> {
+    Ok((1, 1))
+}

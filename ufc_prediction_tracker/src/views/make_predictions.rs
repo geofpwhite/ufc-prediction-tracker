@@ -47,7 +47,6 @@ pub fn Predict(id: usize, link: String) -> Element {
                         .enumerate()
                         .map(|(i, (f1, f2))| {
                             let sel = selected().get(i).cloned().unwrap_or(None);
-                            let id = id.clone();
                             let f1_btn = f1.clone();
                             let f2_btn = f2.clone();
                             let f1_btn2 = f1.clone();
