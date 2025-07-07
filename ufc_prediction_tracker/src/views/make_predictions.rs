@@ -76,7 +76,7 @@ pub fn Predict(id: usize, link: String) -> Element {
                                     }
                                     span { class: "mx-6 text-3xl font-extrabold text-gray-400 text-center w-20vw flex items-center justify-center",
                                         "vs"
-                                    } // add flex and justify-center
+                                    }
                                     button {
                                         class: format!(
                                             "border border-gray-200 px-6 py-3 rounded-lg text-xl font-bold shadow-md transition-colors duration-200 w-full min-w-0 min-h-[56px] flex items-center justify-center {}",

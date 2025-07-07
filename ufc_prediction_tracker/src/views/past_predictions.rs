@@ -65,10 +65,11 @@ pub fn PastPredictions() -> Element {
 
 #[component]
 pub fn PastEvent(id: usize, link: String) -> Element {
-    let mut fights = use_signal(|| Vec::<(String, String)>::new());
+    let mut fights: Signal<Vec<(String, String)>> = use_signal(|| Vec::<(String, String)>::new());
     let mut predictions: Signal<Vec<(String, String)>> =
         use_signal(|| Vec::<(String, String)>::new());
-    let mut correctMap = use_signal(|| HashMap::<(String, String), bool>::new());
+    let mut correctMap: Signal<HashMap<(String, String), bool>> =
+        use_signal(|| HashMap::<(String, String), bool>::new());
     use_effect(move || {
         // let mut fights = fights.clone();
         // let mut predictions = predictions.clone();
@@ -84,7 +85,7 @@ pub fn PastEvent(id: usize, link: String) -> Element {
                 predictions.write().extend(predicted_fights);
             }
             fights.read().iter().for_each(|(f1, f2)| {
-                let f1 = f1.clone();
+                let f1: String = f1.clone();
                 let f2 = f2.clone();
                 spawn(async move {
                     if let Ok(_resultid) = api::add_result(id, f1.clone(), f2.clone()).await {
