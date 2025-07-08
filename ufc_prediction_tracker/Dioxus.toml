@@ -10,6 +10,7 @@ title = "ufc_prediction_tracker"
 
 # Additional CSS style files
 style = [
+"input.css"
 ]
 
 # Additional JavaScript files
@@ -20,3 +21,8 @@ script = []
 # Javascript code file
 # serve: [dev-server] only
 script = []
+
+
+[bundle]
+identifier = "geofpwhite"
+publisher = "geofpwhite"

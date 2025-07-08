@@ -48,16 +48,15 @@ const TAILWIND_CSS: Asset = asset!("/assets/tailwind.css");
 fn main() {
     dioxus_logger::init(Level::INFO).expect("failed to init logger");
 
+    // Create a shared Store instance
+    let store = db::Store::new("./database.db");
+    store.create_tables().expect("Failed to create tables");
+
+    // Pass the store to the API module (assume you add a set_store function or similar)
+    api::set_store(store.clone());
+
     // The `launch` function is the main entry point for a dioxus app. It takes a component and renders it with the platform feature
     // you have enabled
-    let conn = db::get_db_connection().expect("Failed to connect to database");
-    db::create_tables(&conn).expect("Failed to create tables");
-    // dioxus::LaunchBuilder::desktop()
-    //     .with_cfg(
-    //         dioxus::desktop::Config::new()
-    //             .with_window(dioxus::desktop::WindowBuilder::new().with_resizable(true)),
-    //     )
-    //     .launch(App);
     dioxus::launch(App);
 }
 

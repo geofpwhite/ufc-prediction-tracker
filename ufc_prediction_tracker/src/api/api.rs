@@ -1,6 +1,18 @@
 use crate::db;
 use dioxus::prelude::*;
+use std::sync::OnceLock;
 use tracing;
+
+static STORE: OnceLock<db::Store> = OnceLock::new();
+
+pub fn set_store(store: db::Store) {
+    STORE.set(store).ok();
+}
+
+fn get_store() -> &'static db::Store {
+    STORE.get().expect("Store not initialized")
+}
+
 #[server]
 pub async fn get_upcoming_events() -> Result<Vec<(String, String, usize)>, ServerFnError> {
     // Simulate fetching upcoming events from a database or an API
@@ -52,6 +64,7 @@ pub async fn get_upcoming_events() -> Result<Vec<(String, String, usize)>, Serve
         //println!("{}{}", i.0, i.1);
     }
     //println!("Upcoming Events:");
+    let store = get_store();
     let mut ids: Vec<usize> = vec![];
     &result.iter().zip(links.iter()).for_each(|(event, link)| {
         let mut split: Vec<&str> = event
@@ -60,13 +73,10 @@ pub async fn get_upcoming_events() -> Result<Vec<(String, String, usize)>, Serve
             .filter(|s| !s.trim().is_empty())
             .map(|s| s.trim())
             .collect();
-
-        let conn = db::get_db_connection().expect("Failed to connect to database");
         let s1: &str = &split[0];
         let s2: &str = &split[1];
-        let id = db::add_event(&conn, s1, s2, link).expect("");
+        let id = store.add_event(s1, s2, link).expect("");
         ids.push(id.clone());
-        //println!("{}", id);
     });
     Ok(zipped
         .into_iter()
@@ -112,18 +122,17 @@ pub async fn predict(
     winner: String,
     loser: String,
 ) -> Result<bool, ServerFnError> {
-    println!("{}{}{}", event_id, winner, loser);
-    let conn = db::get_db_connection().expect("Failed to connect to database");
-    match db::add_or_update_prediction(&conn, event_id, &winner, &loser) {
-        Ok(f) => Ok(true),
+    let store = get_store();
+    match store.add_or_update_prediction(event_id, &winner, &loser) {
+        Ok(_) => Ok(true),
         Err(e) => Err(e.into()),
     }
 }
 
 #[server]
 pub async fn get_predictions(event_id: usize) -> Result<Vec<(String, String)>, ServerFnError> {
-    let conn = db::get_db_connection().expect("Failed to connect to database");
-    Ok(db::get_predictions(&conn, event_id)?)
+    let store = get_store();
+    Ok(store.get_predictions(event_id)?)
 }
 
 #[server]
@@ -132,8 +141,8 @@ pub async fn add_result(
     winner: String,
     loser: String,
 ) -> Result<usize, ServerFnError> {
-    let conn = db::get_db_connection().expect("Failed to connect to database");
-    match db::add_or_update_result(&conn, event_id, &winner, &loser) {
+    let store = get_store();
+    match store.add_or_update_result(event_id, &winner, &loser) {
         Ok(f) => Ok(f),
         Err(e) => Err(e.into()),
     }
@@ -142,8 +151,8 @@ pub async fn add_result(
 #[server]
 pub async fn get_events_with_predictions(
 ) -> Result<Vec<(usize, String, String, String)>, ServerFnError> {
-    let conn = db::get_db_connection().expect("Failed to connect to database");
-    Ok(db::get_past_events_with_predictions(&conn)?)
+    let store = get_store();
+    Ok(store.get_past_events_with_predictions()?)
 }
 
 #[server]
@@ -151,7 +160,7 @@ pub async fn scrape_results(
     event_link: String,
     event_id: usize,
 ) -> Result<Vec<(String, String)>, ServerFnError> {
-    let conn = db::get_db_connection().expect("Failed to connect to database");
+    // This function still fetches from the web, but you can use store if you need DB access
     let response = reqwest::get(&event_link)
         .await
         .map_err(|e| ServerFnError::new(format!("Failed to fetch event page: {}", e)))?
@@ -184,10 +193,12 @@ pub async fn scrape_results(
 
 #[server]
 pub async fn get_total_prediction_correctness() -> Result<(i64, i64), ServerFnError> {
-    let conn = db::get_db_connection().expect("");
-    Ok(db::get_my_predictions_correctness(&conn)?)
+    let store = get_store();
+    Ok(store.get_my_predictions_correctness()?)
 }
+
 #[server]
 pub async fn get_prediction_correctness_for_event(id: usize) -> Result<(i64, i64), ServerFnError> {
-    Ok((1, 1))
+    let store = get_store();
+    Ok(store.get_my_predictions_correctness_for_event(id)?)
 }
