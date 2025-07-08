@@ -10,10 +10,7 @@ readme = "README.md"
 keywords = ["ufc", "prediction", "tracker"]
 categories = ["command-line-utilities"]
 include = [
-    "assets/**",
-    "static/**",
-    "Cargo.toml",
-    "README.md",
+    "target/dx/ufc_prediction_tracker/release/windows/app/assets/*"
 ]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
